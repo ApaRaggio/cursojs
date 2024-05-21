@@ -71,8 +71,54 @@ function resultado( importe,cotizacion){
 
 alert(resultado(importe,cotizacion));
 
+//hago un for. defino una variable cotizaciones y con un if con la variable cotizacion indicada y manejo los importes para dar regalos
 
 
+let cotizaciones = [];
 
-// hacer un for que recorra el importe y de un regalo
+if (cotizacion === 1 || cotizacion === 2) {
+    cotizaciones.push(1); 
+} 
+if (cotizacion === 3 || cotizacion === 4) {
+    cotizaciones.push(2); 
+} 
+if (cotizacion === 5 || cotizacion === 6) {
+    cotizaciones.push(3); 
+} 
+
+console.log(cotizaciones);
+
+for (let i = 0; i < cotizaciones.length; i++) {
+    let cotizacionIndicada = cotizaciones[i];
+    
+    switch (cotizacionIndicada) {
+        case 1:
+            if (importe >= 300 && importe <= 500) {
+                alert(`Ganaste 1000 pesos a favor en tu próximo cambio`);
+            } else if (importe > 500) {
+                alert(`Ganaste 2000 pesos a favor en tu próximo cambio`);
+            } else{
+                alert(`No accediste a regalo`);
+            }
+            break;
+        case 2:
+            if (importe >= 10000 && importe <= 20000) {
+                alert(`Ganaste 1000 pesos a favor en tu próximo cambio`);
+            } else if (importe > 20000) {
+                alert(`Ganaste 2000 pesos a favor en tu próximo cambio`);
+            } else{
+                alert(`No accediste a regalo`);
+            }
+            break;
+        case 3:
+            if (importe >= 300 && importe <= 500) {
+                alert(`Ganaste 1000 pesos a favor en tu próximo cambio`);
+            } else if (importe > 500) {
+                alert(`Ganaste 2000 pesos a favor en tu próximo cambio`);
+            } else{
+                alert(`No accediste a regalo`);
+            }
+            break;
+    }
+}
 
