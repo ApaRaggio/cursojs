@@ -11,7 +11,7 @@ nav.style.textAlign = 'center';
 main.innerHTML = `
     <div class="section-container">
         <h1>Conversor de Moneda</h1>
-        <div id="conversionContainer" >
+        <div id="conversionContainer">
             <form id="conversionForm">
                 <label for="monedaOrigen">Seleccione la moneda de origen:</label>
                 <select id="monedaOrigen">
@@ -41,15 +41,12 @@ main.innerHTML = `
                     <th>Bandera</th>
                 </tr>
             </thead>
-            
             <tbody>
-                <tr></tr>  
                 <tr>
                     <td>Dólar</td>
                     <td id="valorDolar">$U: 39</td>
                     <td><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/640px-Flag_of_the_United_States.svg.png" style="width: 30px; height: auto;"></td>
                 </tr>
-               
                 <tr>
                     <td>Euro</td>
                     <td id="valorEuro">$U: 41</td>
@@ -60,7 +57,7 @@ main.innerHTML = `
     </div>
     <div class="section-container">
         <h1>Simulador</h1>
-        <div id="simulacionContainer" >
+        <div id="simulacionContainer">
             <form id="simulacionForm">
                 <label for="prestamo">Tipo de préstamo:</label>
                 <select id="prestamo">
@@ -71,7 +68,7 @@ main.innerHTML = `
                 <label for="monto">Monto solicitado:</label>
                 <input type="number" id="monto" step="0.01"><br><br>
                 <label for="cuotas">Cantidad de cuotas:</label>
-                <input type="number" id="cuotas" step="0.01"><br><br>
+                <input type="number" id="cuotas" step="1"><br><br>
                 <button type="submit">Simular</button>
             </form>
         </div>
@@ -79,29 +76,27 @@ main.innerHTML = `
 `;
 
 main.style.backgroundColor = '#f0f0f0';
-main.style.height = '600px';
+main.style.height = 'auto'; 
 main.style.padding = '1rem';
 main.style.borderBottom = '2px solid #ccc';
 main.style.display = 'grid';
-main.style.justifyContent = 'space-evenly'; // Para centrado horizontal de los elementos
-main.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))'; // Usamos grid para las columnas responsivas
-main.style.gap = '10rem'; // Espacio entre columnas
+main.style.justifyContent = 'space-evenly'; 
+main.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))'; 
+main.style.gap = '10px'; 
 
-// Establecer estilos para los contenedores (divs)
+
 const sectionContainers = main.querySelectorAll('.section-container');
 sectionContainers.forEach(container => {
     container.style.backgroundColor = '#fff';
-    container.style.width= '80%';
-    container.style.height= '400px';
+    container.style.width = '80%';
+    container.style.padding = '1rem';
     container.style.border = '1px solid #ccc';
     container.style.borderRadius = '8px';
     container.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-    container.style.padding = '1rem';
-    container.style.textAlign= 'center'
-
+    container.style.textAlign = 'center';
 });
 
-// Establecer estilos para los botones
+
 const buttons = main.querySelectorAll('button');
 buttons.forEach(button => {
     button.style.padding = '0.5rem 1rem';
@@ -114,7 +109,7 @@ buttons.forEach(button => {
     button.style.marginTop = '1rem';
 });
 
-// Establecer estilos para los formularios dentro de los contenedores (divs)
+
 const forms = main.querySelectorAll('form');
 forms.forEach(form => {
     form.style.margin = '0 auto'; // Centrar el formulario dentro del div
@@ -135,7 +130,7 @@ document.body.appendChild(nav);
 document.body.appendChild(main);
 document.body.appendChild(footer);
 
-// Comienza código de programa
+
 class Transaccion {
     constructor(monedaOrigen, importe, monedaDestino, resultado, regalo) {
         this.monedaOrigen = this.traducirMoneda(monedaOrigen);
@@ -158,7 +153,7 @@ class Transaccion {
         }
     }
 
-    // Método para convertir la transacción a un objeto JSON
+    
     toJSON() {
         return {
             monedaOrigen: this.monedaOrigen,
@@ -171,8 +166,7 @@ class Transaccion {
 }
 
 document.getElementById('conversionForm').addEventListener('submit', (event) => {
-    event.preventDefault(); // Evita que el formulario se envíe de forma predeterminada
-
+    event.preventDefault(); 
     const seleccion = document.getElementById('monedaOrigen').value;
     const importe = parseFloat(document.getElementById('importe').value);
     const cambioMoneda = document.getElementById('monedaDestino').value;
@@ -221,7 +215,7 @@ document.getElementById('conversionForm').addEventListener('submit', (event) => 
 
     const importeConvertido = resultado(importe, cotizacion);
 
-    // Manejo de regalos
+    //  regalos
     let regalo = "No accediste a regalo";
     let cotizaciones = [];
 
@@ -262,16 +256,15 @@ document.getElementById('conversionForm').addEventListener('submit', (event) => 
         }
     }
 
-    // Crear instancia de Transaccion
     const transaccion = new Transaccion(seleccion, importe, cambioMoneda, importeConvertido, regalo);
 
-    // Convertir la instancia a JSON
+    
     const transaccionJSON = transaccion.toJSON();
 
-    // Mostrar JSON en la consola
+    
     console.log('Transacción JSON:', transaccionJSON);
 
-    // Mostrar resumen de la venta en la tabla
+    
     const resultTable = `
         <table style="margin-top: 20px; border: 1px solid black;">
             <thead>
@@ -305,6 +298,67 @@ document.getElementById('conversionForm').addEventListener('submit', (event) => 
         </table>
     `;
 
-    // Reemplazar el contenido del div con la tabla de resultados
+    
     document.getElementById('conversionContainer').innerHTML = resultTable;
+});
+
+
+const tasasInteres = {
+    1: 0.10, 
+    2: 0.05, 
+    3: 0.08 
+};
+
+document.getElementById('simulacionForm').addEventListener('submit', (event) => {
+    event.preventDefault(); 
+
+    const tipoPrestamo = document.getElementById('prestamo').value;
+    const monto = parseFloat(document.getElementById('monto').value);
+    const cuotas = parseInt(document.getElementById('cuotas').value);
+
+    if (!monto || monto <= 0 || !cuotas || cuotas <= 0) {
+        alert("Por favor, ingrese un monto y una cantidad de cuotas válidos.");
+        return;
+    }
+
+    const tasaInteres = tasasInteres[tipoPrestamo];
+    const valorCuota = (monto * (1 + tasaInteres)) / cuotas;
+
+
+    localStorage.setItem('tipoPrestamo', tipoPrestamo);
+    localStorage.setItem('monto', monto);
+    localStorage.setItem('cuotas', cuotas);
+
+    
+    const simulacionResult = `
+        <table style="margin-top: 20px; border: 1px solid black;">
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Préstamo solicitado</td>
+                    <td>${tipoPrestamo == '1' ? 'Préstamo Consumo' : tipoPrestamo == '2' ? 'Préstamo Hipotecario' : 'Préstamo Automotor'}</td>
+                </tr>
+                <tr>
+                    <td>Monto</td>
+                    <td>${monto.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>Cuotas</td>
+                    <td>${cuotas}</td>
+                </tr>
+                <tr>
+                    <td>Valor cuota</td>
+                    <td>${valorCuota.toFixed(2)}</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
+    
+    document.getElementById('simulacionContainer').innerHTML = simulacionResult;
 });
