@@ -32,25 +32,25 @@ main.innerHTML = `
         </div>
     </div>
     <div id="pizarraContainer" class="section-container">
-        <h1>Pizarra</h1>
+       <h1>Pizarra</h1>
         <table id="pizarraTable" style="width: 80%; margin: 0 auto; border-collapse: collapse;">
             <thead>
                 <tr>
                     <th>Moneda</th>
                     <th>Valor</th>
-                    <th>Bandera</th>
+                    
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Dólar</td>
-                    <td id="valorDolar">$U: 39</td>
                     <td><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/640px-Flag_of_the_United_States.svg.png" style="width: 30px; height: auto;"></td>
+                    <td id="valorDolar">$U: 39</td>
+                    
                 </tr>
                 <tr>
-                    <td>Euro</td>
-                    <td id="valorEuro">$U: 41</td>
                     <td><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/640px-Flag_of_Europe.svg.png" style="width: 30px; height: auto;"></td>
+                    <td id="valorEuro">$U: 41</td>
+                    
                 </tr>
             </tbody>
         </table>
