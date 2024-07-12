@@ -4,7 +4,11 @@ const main = document.createElement('main');
 const footer = document.createElement('footer');
 
 // Defino el nav
-nav.innerHTML = `<h1>Bienvenido al CoderBank</h1>`;
+nav.innerHTML = `<h1>Bienvenido al CoderBank</h1>
+    <div style="position: relative; display: inline-block;">
+        <i class="fas fa-shopping-cart" style="font-size: 24px; cursor: pointer;"></i>
+        <span id="carrito-count" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; padding: 5px 10px; font-size: 14px;">0</span>
+    </div>`;
 nav.style.textAlign = 'center';
 
 // Defino main
@@ -32,28 +36,24 @@ main.innerHTML = `
         </div>
     </div>
     <div id="pizarraContainer" class="section-container">
-        <h1>Pizarra</h1>
-        <table id="pizarraTable" style="width: 80%; margin: 0 auto; border-collapse: collapse;">
-            <thead>
-                <tr>
-                    <th>Moneda</th>
-                    <th>Valor</th>
-                    <th>Bandera</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Dólar</td>
-                    <td id="valorDolar">$U: 39</td>
-                    <td><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/640px-Flag_of_the_United_States.svg.png" style="width: 30px; height: auto;"></td>
-                </tr>
-                <tr>
-                    <td>Euro</td>
-                    <td id="valorEuro">$U: 41</td>
-                    <td><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/640px-Flag_of_Europe.svg.png" style="width: 30px; height: auto;"></td>
-                </tr>
-            </tbody>
-        </table>
+       <h1>Seguros</h1>
+        <form id="seguro" style="width: 80%; margin: 0 auto; border-collapse: collapse;">
+           <label for="tiposeguro">Seleccione seguro:</label>
+                <select id="tiposeguro">
+                    <option value="1">Automotor</option>
+                    <option value="2">Hipotecario</option>
+                    <option value="3">Vida</option>
+                </select><br><br>
+                <div id="cuotasContainer" style="display: none;">
+                    <label for="cuotas">Seleccione cantidad de cuotas:</label>
+                    <select id="cuotas">
+                        <option value="6">6 cuotas</option>
+                        <option value="10">10 cuotas</option>
+                        <option value="12">12 cuotas</option>
+                    </select><br><br>
+                </div>
+                <button type="submit" id="accionBtn">Seleccionar Seguro</button>
+        </form>
     </div>
     <div class="section-container">
         <h1>Simulador</h1>
@@ -63,12 +63,12 @@ main.innerHTML = `
                 <select id="prestamo">
                     <option value="1">Préstamo Consumo</option>
                     <option value="2">Préstamo Hipotecario</option>
-                    <option value="3">Préstamo automotor</option>
+                    <option value="3">Préstamo Automotor</option>
                 </select><br><br>
                 <label for="monto">Monto solicitado:</label>
                 <input type="number" id="monto" step="0.01"><br><br>
                 <label for="cuotas">Cantidad de cuotas:</label>
-                <input type="number" id="cuotas" step="1"><br><br>
+                <input type="number" id="cuotasPrestamo" step="1"><br><br>
                 <button type="submit">Simular</button>
             </form>
         </div>
@@ -84,7 +84,6 @@ main.style.justifyContent = 'space-evenly';
 main.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))'; 
 main.style.gap = '10px'; 
 
-
 const sectionContainers = main.querySelectorAll('.section-container');
 sectionContainers.forEach(container => {
     container.style.backgroundColor = '#fff';
@@ -95,7 +94,6 @@ sectionContainers.forEach(container => {
     container.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
     container.style.textAlign = 'center';
 });
-
 
 const buttons = main.querySelectorAll('button');
 buttons.forEach(button => {
@@ -108,7 +106,6 @@ buttons.forEach(button => {
     button.style.borderRadius = '4px';
     button.style.marginTop = '1rem';
 });
-
 
 const forms = main.querySelectorAll('form');
 forms.forEach(form => {
@@ -129,7 +126,6 @@ footer.style.textAlign = 'center';
 document.body.appendChild(nav);
 document.body.appendChild(main);
 document.body.appendChild(footer);
-
 
 class Transaccion {
     constructor(monedaOrigen, importe, monedaDestino, resultado, regalo) {
@@ -152,7 +148,6 @@ class Transaccion {
                 return "Moneda desconocida";
         }
     }
-
     
     toJSON() {
         return {
@@ -165,7 +160,7 @@ class Transaccion {
     }
 }
 
-document.getElementById('conversionForm').addEventListener('submit', (event) => {
+document.getElementById('conversionForm').addEventListener('submit', async (event) => {
     event.preventDefault(); 
     const seleccion = document.getElementById('monedaOrigen').value;
     const importe = parseFloat(document.getElementById('importe').value);
@@ -176,132 +171,157 @@ document.getElementById('conversionForm').addEventListener('submit', (event) => 
         return;
     }
 
-    let cotizacion;
-    if (seleccion === '1' && cambioMoneda === '2') {
-        cotizacion = 1; // Dólar a pesos 
-    } else if (seleccion === '1' && cambioMoneda === '3') {
-        cotizacion = 2; // Dólar a euro
-    } else if (seleccion === '2' && cambioMoneda === '1') {
-        cotizacion = 3; // Peso a dólar
-    } else if (seleccion === '2' && cambioMoneda === '3') {
-        cotizacion = 4; // Peso a euros
-    } else if (seleccion === '3' && cambioMoneda === '1') {
-        cotizacion = 5; // Euro a dólar
-    } else if (seleccion === '3' && cambioMoneda === '2') {
-        cotizacion = 6; // Euro a pesos
-    } else {
-        alert("Tipo de moneda equivocada");
-        return;
-    }
-
-    function resultado(importe, cotizacion) {
-        switch (cotizacion) {
-            case 1:
-                return importe * 39; // Dólar a pesos 
-            case 2:
-                return importe * 0.92; // Dólar a euro
-            case 3:
-                return importe / 39; // Pesos a dólar
-            case 4:
-                return importe / 41; // Pesos a euros
-            case 5:
-                return importe * 1.9; // Euros a dólar
-            case 6:
-                return importe * 42.1; // Euros a pesos
-            default:
-                return "No cotización válida para esos tipos de moneda";
+    try {
+        console.log('Fetching tasasCambio.json...');
+        const response = await fetch('tasasCambio.json');
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error('Error al obtener las tasas de cambio');
         }
-    }
+        const tasasCambio = await response.json();
+        console.log('Tasas de cambio obtenidas:', tasasCambio);
 
-    const importeConvertido = resultado(importe, cotizacion);
+        const key = `${seleccion}_${cambioMoneda}`;
+        const cotizacion = tasasCambio[key];
+        console.log('Cotización obtenida:', cotizacion);
 
-    //  regalos
-    let regalo = "No accediste a regalo";
-    let cotizaciones = [];
-
-    if (cotizacion === 1 || cotizacion === 2) {
-        cotizaciones.push(1);
-    }
-    if (cotizacion === 3 || cotizacion === 4) {
-        cotizaciones.push(2);
-    }
-    if (cotizacion === 5 || cotizacion === 6) {
-        cotizaciones.push(3);
-    }
-
-    for (let i = 0; i < cotizaciones.length; i++) {
-        const cotizacionIndicada = cotizaciones[i];
-        switch (cotizacionIndicada) {
-            case 1:
-                if (importe >= 300 && importe <= 500) {
-                    regalo = "$1000 a favor en tu próximo cambio";
-                } else if (importe > 500) {
-                    regalo = "$2000 pesos a favor en tu próximo cambio";
-                }
-                break;
-            case 2:
-                if (importe >= 10000 && importe <= 20000) {
-                    regalo = "$1000 pesos a favor en tu próximo cambio";
-                } else if (importe > 20000) {
-                    regalo = "$2000 pesos a favor en tu próximo cambio";
-                }
-                break;
-            case 3:
-                if (importe >= 300 && importe <= 500) {
-                    regalo = "$1000 pesos a favor en tu próximo cambio";
-                } else if (importe > 500) {
-                    regalo = "$2000 pesos a favor en tu próximo cambio";
-                }
-                break;
+        if (!cotizacion) {
+            alert("No se encontró una cotización válida para esos tipos de moneda");
+            return;
         }
+
+        const importeConvertido = importe * cotizacion;
+
+        let regalo = "No accediste a regalo";
+        let cotizaciones = [];
+
+        if (cotizacion === tasasCambio["1_2"] || cotizacion === tasasCambio["1_3"]) {
+            cotizaciones.push(1);
+        }
+        if (cotizacion === tasasCambio["2_1"] || cotizacion === tasasCambio["2_3"]) {
+            cotizaciones.push(2);
+        }
+        if (cotizacion === tasasCambio["3_1"] || cotizacion === tasasCambio["3_2"]) {
+            cotizaciones.push(3);
+        }
+
+        for (let i = 0; i < cotizaciones.length; i++) {
+            const cotizacionIndicada = cotizaciones[i];
+            switch (cotizacionIndicada) {
+                case 1:
+                    if (importe >= 300 && importe <= 500) {
+                        regalo = "$1000 a favor en tu próximo cambio";
+                    } else if (importe > 500) {
+                        regalo = "$2000 pesos a favor en tu próximo cambio";
+                    }
+                    break;
+                case 2:
+                    if (importe >= 10000 && importe <= 20000) {
+                        regalo = "$1000 pesos a favor en tu próximo cambio";
+                    } else if (importe > 20000) {
+                        regalo = "$2000 pesos a favor en tu próximo cambio";
+                    }
+                    break;
+                case 3:
+                    if (importe >= 300 && importe <= 500) {
+                        regalo = "$1000 pesos a favor en tu próximo cambio";
+                    } else if (importe > 500) {
+                        regalo = "$2000 pesos a favor en tu próximo cambio";
+                    }
+                    break;
+            }
+        }
+
+        const transaccion = new Transaccion(seleccion, importe, cambioMoneda, importeConvertido, regalo);
+        const transaccionJSON = transaccion.toJSON();
+        localStorage.setItem('ultimaTransaccion', JSON.stringify(transaccionJSON));
+
+        Swal.fire({
+            title: 'Resultado de la Conversión',
+            html: `
+                <p><strong>Moneda Origen:</strong> ${transaccion.monedaOrigen}</p>
+                <p><strong>Importe:</strong> ${transaccion.importe}</p>
+                <p><strong>Moneda Destino:</strong> ${transaccion.monedaDestino}</p>
+                <p><strong>Importe Convertido:</strong> ${transaccion.resultado}</p>
+                <p><strong>Regalo:</strong> ${transaccion.regalo}</p>
+            `,
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+        });
+    } catch (error) {
+        console.error("Error durante la conversión:", error);
+        alert("Hubo un error al realizar la conversión. Por favor, inténtelo nuevamente.");
     }
-
-    const transaccion = new Transaccion(seleccion, importe, cambioMoneda, importeConvertido, regalo);
-
-    
-    const transaccionJSON = transaccion.toJSON();
-
-    
-    console.log('Transacción JSON:', transaccionJSON);
-
-    
-    const resultTable = `
-        <table style="margin-top: 20px; border: 1px solid black;">
-            <thead>
-                <tr>
-                    <th>Concepto</th>
-                    <th>Valor</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Moneda de origen</td>
-                    <td>${transaccion.monedaOrigen}</td>
-                </tr>
-                <tr>
-                    <td>Importe</td>
-                    <td>${transaccion.importe.toFixed(2)}</td>
-                </tr>
-                <tr>
-                    <td>Moneda de destino</td>
-                    <td>${transaccion.monedaDestino}</td>
-                </tr>
-                <tr>
-                    <td>Resultado de la conversión</td>
-                    <td>${transaccion.resultado.toFixed(2)}</td>
-                </tr>
-                <tr>
-                    <td>Regalo</td>
-                    <td>${transaccion.regalo}</td>
-                </tr>
-            </tbody>
-        </table>
-    `;
-
-    
-    document.getElementById('conversionContainer').innerHTML = resultTable;
 });
 
+// Carrito de seguros
+let carritoSeguros = [];
+
+// Función que muestra las opciones de cuotas y el botón de contratar
+function mostrarOpcionesCuotas() {
+    return new Promise((resolve) => {
+        const cuotasContainer = document.getElementById('cuotasContainer');
+        cuotasContainer.style.display = 'block';
+        const accionBtn = document.getElementById('accionBtn');
+        accionBtn.textContent = 'Contratar';
+        document.getElementById('cuotas').addEventListener('change', () => {
+            accionBtn.style.display = 'block';
+            resolve();
+        });
+    });
+}
+
+// Modifica la función de envío del formulario de seguros
+document.getElementById('seguro').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const accionBtn = document.getElementById('accionBtn');
+    const tiposeguro = document.getElementById('tiposeguro').value;
+    const seguros = {
+        '1': 'Automotor',
+        '2': 'Hipotecario',
+        '3': 'Vida'
+    };
+
+    const seguroSeleccionado = seguros[tiposeguro];
+
+    if (accionBtn.textContent === 'Seleccionar Seguro') {
+        if (seguroSeleccionado) {
+            mostrarOpcionesCuotas().then(() => {
+                accionBtn.addEventListener('click', () => {
+                    carritoSeguros.push(seguroSeleccionado);
+                    document.getElementById('carrito-count').textContent = carritoSeguros.length;
+                    Swal.fire({
+                        title: 'Seguro Agregado',
+                        text: `${seguroSeleccionado} ha sido agregado al carrito.`,
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    accionBtn.textContent = 'Seleccionar Seguro';
+                    document.getElementById('cuotasContainer').style.display = 'none';
+                }, {once: true});
+            });
+        }
+    }
+});
+
+// Mostrar el contenido del carrito
+document.querySelector('.fa-shopping-cart').addEventListener('click', () => {
+    if (carritoSeguros.length === 0) {
+        Swal.fire({
+            title: 'Carrito Vacío',
+            text: 'No has agregado ningún seguro.',
+            icon: 'info',
+            confirmButtonText: 'Aceptar'
+        });
+    } else {
+        Swal.fire({
+            title: 'Carrito de Seguros',
+            html: carritoSeguros.map(seguro => `<p>${seguro}</p>`).join(''),
+            icon: 'info',
+            confirmButtonText: 'Comprar'
+        });
+    }
+});
 
 const tasasInteres = {
     1: 0.10, 
@@ -314,22 +334,21 @@ document.getElementById('simulacionForm').addEventListener('submit', (event) => 
 
     const tipoPrestamo = document.getElementById('prestamo').value;
     const monto = parseFloat(document.getElementById('monto').value);
-    const cuotas = parseInt(document.getElementById('cuotas').value);
+    const cuotasPrestamo = parseInt(document.getElementById('cuotasPrestamo').value);
 
-    if (!monto || monto <= 0 || !cuotas || cuotas <= 0) {
+    if (!monto || monto <= 0 || !cuotasPrestamo || cuotasPrestamo <= 0) {
         alert("Por favor, ingrese un monto y una cantidad de cuotas válidos.");
         return;
     }
 
     const tasaInteres = tasasInteres[tipoPrestamo];
-    const valorCuota = (monto * (1 + tasaInteres)) / cuotas;
-
+    const valorCuota = (monto * (1 + tasaInteres)) / cuotasPrestamo;
 
     localStorage.setItem('tipoPrestamo', tipoPrestamo);
     localStorage.setItem('monto', monto);
-    localStorage.setItem('cuotas', cuotas);
+    localStorage.setItem('cuotasPrestamo', cuotasPrestamo);
 
-    
+
     const simulacionResult = `
         <table style="margin-top: 20px; border: 1px solid black;">
             <thead>
@@ -349,7 +368,7 @@ document.getElementById('simulacionForm').addEventListener('submit', (event) => 
                 </tr>
                 <tr>
                     <td>Cuotas</td>
-                    <td>${cuotas}</td>
+                    <td>${cuotasPrestamo}</td>
                 </tr>
                 <tr>
                     <td>Valor cuota</td>
@@ -359,6 +378,10 @@ document.getElementById('simulacionForm').addEventListener('submit', (event) => 
         </table>
     `;
 
-    
-    document.getElementById('simulacionContainer').innerHTML = simulacionResult;
+    Swal.fire({
+        title: 'Resultado de la Simulación',
+        html: simulacionResult,
+        icon: 'info',
+        confirmButtonText: 'Aceptar'
+    });
 });

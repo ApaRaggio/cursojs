@@ -1,0 +1,27 @@
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+nav h1 {
+    margin: 0;
+}
+
+nav .fa-shopping-cart {
+    font-size: 24px;
+    cursor: pointer;
+    position: relative;
+}
+
+nav #carrito-count {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 10px;
+    font-size: 14px;
+}
