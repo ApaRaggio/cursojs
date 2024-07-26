@@ -6,7 +6,7 @@ const footer = document.createElement('footer');
 // Defino el nav
 nav.innerHTML = `<h1>Bienvenido al CoderBank</h1>
     <div style="position: relative; display: inline-block;">
-        <i class="fas fa-shopping-cart" style="font-size: 24px; cursor: pointer;"></i>
+        <i class="fas fa-shopping-cart" style="font-size: 24px; cursor: pointer;" id="cartIcon"></i>
         <span id="carrito-count" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; padding: 5px 10px; font-size: 14px;">0</span>
     </div>`;
 nav.style.textAlign = 'center';
@@ -160,6 +160,7 @@ class Transaccion {
     }
 }
 
+
 document.getElementById('conversionForm').addEventListener('submit', async (event) => {
     event.preventDefault(); 
     const seleccion = document.getElementById('monedaOrigen').value;
@@ -167,26 +168,53 @@ document.getElementById('conversionForm').addEventListener('submit', async (even
     const cambioMoneda = document.getElementById('monedaDestino').value;
 
     if (!importe || importe <= 0 || seleccion === cambioMoneda) {
-        alert("Por favor, ingrese un importe válido y asegúrese de que la moneda de origen y destino sean diferentes.");
+        Swal.fire({
+            title: 'Error',
+            text: "Por favor, ingrese un importe válido y asegúrese de que la moneda de origen y destino sean diferentes.",
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
         return;
     }
 
     try {
-        console.log('Fetching tasasCambio.json...');
-        const response = await fetch('tasasCambio.json');
-        console.log('Response status:', response.status);
+        // Llama a la API para obtener las tasas de cambio
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
         if (!response.ok) {
             throw new Error('Error al obtener las tasas de cambio');
         }
         const tasasCambio = await response.json();
-        console.log('Tasas de cambio obtenidas:', tasasCambio);
 
-        const key = `${seleccion}_${cambioMoneda}`;
-        const cotizacion = tasasCambio[key];
-        console.log('Cotización obtenida:', cotizacion);
+        // Define las monedas de origen y destino
+        const monedas = {
+            '1': 'USD',
+            '2': 'UYU', // Peso Uruguayo
+            '3': 'EUR'
+        };
+
+        const monedaOrigen = monedas[seleccion];
+        const monedaDestino = monedas[cambioMoneda];
+
+        if (!monedaOrigen || !monedaDestino) {
+            Swal.fire({
+                title: 'Error',
+                text: "Moneda de origen o destino no válida.",
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        // Obtiene la cotización de la moneda destino con respecto a la moneda origen
+        const cotizacion = tasasCambio.rates[monedaDestino] / tasasCambio.rates[monedaOrigen];
 
         if (!cotizacion) {
-            alert("No se encontró una cotización válida para esos tipos de moneda");
+            Swal.fire({
+                title: 'Error',
+                text: "No se encontró una cotización válida para esos tipos de moneda.",
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
             return;
         }
 
@@ -195,13 +223,15 @@ document.getElementById('conversionForm').addEventListener('submit', async (even
         let regalo = "No accediste a regalo";
         let cotizaciones = [];
 
-        if (cotizacion === tasasCambio["1_2"] || cotizacion === tasasCambio["1_3"]) {
+        // Comparar la cotización actual con las tasas definidas en la nueva nomenclatura
+        if (cotizacion === tasasCambio.rates['UYU'] / tasasCambio.rates['USD'] || 
+            cotizacion === tasasCambio.rates['EUR'] / tasasCambio.rates['USD']) {
             cotizaciones.push(1);
-        }
-        if (cotizacion === tasasCambio["2_1"] || cotizacion === tasasCambio["2_3"]) {
+        } else if (cotizacion === tasasCambio.rates['USD'] / tasasCambio.rates['UYU'] || 
+                   cotizacion === tasasCambio.rates['EUR'] / tasasCambio.rates['UYU']) {
             cotizaciones.push(2);
-        }
-        if (cotizacion === tasasCambio["3_1"] || cotizacion === tasasCambio["3_2"]) {
+        } else if (cotizacion === tasasCambio.rates['USD'] / tasasCambio.rates['EUR'] || 
+                   cotizacion === tasasCambio.rates['UYU'] / tasasCambio.rates['EUR']) {
             cotizaciones.push(3);
         }
 
@@ -232,156 +262,296 @@ document.getElementById('conversionForm').addEventListener('submit', async (even
             }
         }
 
-        const transaccion = new Transaccion(seleccion, importe, cambioMoneda, importeConvertido, regalo);
-        const transaccionJSON = transaccion.toJSON();
-        localStorage.setItem('ultimaTransaccion', JSON.stringify(transaccionJSON));
-
+        // Muestra el resultado
         Swal.fire({
-            title: 'Resultado de la Conversión',
-            html: `
-                <p><strong>Moneda Origen:</strong> ${transaccion.monedaOrigen}</p>
-                <p><strong>Importe:</strong> ${transaccion.importe}</p>
-                <p><strong>Moneda Destino:</strong> ${transaccion.monedaDestino}</p>
-                <p><strong>Importe Convertido:</strong> ${transaccion.resultado}</p>
-                <p><strong>Regalo:</strong> ${transaccion.regalo}</p>
-            `,
+            title: 'Conversión Exitosa',
+            html: `Monto convertido: ${importeConvertido.toFixed(2)}<br>${regalo}`,
             icon: 'success',
             confirmButtonText: 'Aceptar'
         });
+
+        // Guarda la transacción
+        const transaccion = new Transaccion(seleccion, importe, cambioMoneda, importeConvertido, regalo);
+        let transacciones = JSON.parse(localStorage.getItem('transacciones')) || [];
+        transacciones.push(transaccion);
+        localStorage.setItem('transacciones', JSON.stringify(transacciones));
+
+        // Actualiza el carrito
+        actualizarCarrito();
+
     } catch (error) {
-        console.error("Error durante la conversión:", error);
-        alert("Hubo un error al realizar la conversión. Por favor, inténtelo nuevamente.");
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: error.message,
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
     }
 });
 
-// Carrito de seguros
-let carritoSeguros = [];
-
-// Función que muestra las opciones de cuotas y el botón de contratar
 function mostrarOpcionesCuotas() {
     return new Promise((resolve) => {
         const cuotasContainer = document.getElementById('cuotasContainer');
-        cuotasContainer.style.display = 'block';
         const accionBtn = document.getElementById('accionBtn');
+
+        cuotasContainer.style.display = 'block';
         accionBtn.textContent = 'Contratar';
+
         document.getElementById('cuotas').addEventListener('change', () => {
             accionBtn.style.display = 'block';
-            resolve();
-        });
+            resolve(); 
+        }, { once: true }); 
     });
 }
 
-// Modifica la función de envío del formulario de seguros
-document.getElementById('seguro').addEventListener('submit', (event) => {
-    event.preventDefault();
-    const accionBtn = document.getElementById('accionBtn');
-    const tiposeguro = document.getElementById('tiposeguro').value;
-    const seguros = {
-        '1': 'Automotor',
-        '2': 'Hipotecario',
-        '3': 'Vida'
-    };
 
-    const seguroSeleccionado = seguros[tiposeguro];
 
-    if (accionBtn.textContent === 'Seleccionar Seguro') {
-        if (seguroSeleccionado) {
-            mostrarOpcionesCuotas().then(() => {
-                accionBtn.addEventListener('click', () => {
-                    carritoSeguros.push(seguroSeleccionado);
-                    document.getElementById('carrito-count').textContent = carritoSeguros.length;
-                    Swal.fire({
-                        title: 'Seguro Agregado',
-                        text: `${seguroSeleccionado} ha sido agregado al carrito.`,
-                        icon: 'success',
-                        confirmButtonText: 'Aceptar'
-                    });
-                    accionBtn.textContent = 'Seleccionar Seguro';
-                    document.getElementById('cuotasContainer').style.display = 'none';
-                }, {once: true});
-            });
-        }
+class Seguro {
+    constructor(tipoSeguro, cuotas, total, totalCuotas) {
+        this.tipoSeguro = tipoSeguro;
+        this.cuotas = cuotas;
+        this.total = total;
+        this.totalCuotas = totalCuotas;
     }
+
+    toJSON() {
+        return {
+            tipoSeguro: this.tipoSeguro,
+            cuotas: this.cuotas,
+            total: this.total,
+            totalCuotas: this.totalCuotas
+        };
+    }
+}
+
+document.getElementById('tiposeguro').addEventListener('change', () => {
+    mostrarOpcionesCuotas();
 });
 
-// Mostrar el contenido del carrito
-document.querySelector('.fa-shopping-cart').addEventListener('click', () => {
-    if (carritoSeguros.length === 0) {
+document.getElementById('seguro').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const tipoSeguro = document.getElementById('tiposeguro').value;
+    const cuotas = document.getElementById('cuotas').value;
+
+    try {
+        const response = await fetch('seguros.json');
+        if (!response.ok) {
+            throw new Error('Error al obtener la información de los seguros');
+        }
+        const seguros = await response.json();
+
+        const seguroSeleccionado = seguros[tipoSeguro];
+        if (!seguroSeleccionado) {
+            Swal.fire({
+                title: 'Error',
+                text: "No se encontró información del seguro seleccionado.",
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        const total = seguroSeleccionado.costo;
+        const totalCuotas = total / cuotas;
+
+        const seguro = new Seguro(tipoSeguro, cuotas, total, totalCuotas);
+
+        let segurosGuardados = JSON.parse(localStorage.getItem('seguros')) || [];
+        segurosGuardados.push(seguro);
+        localStorage.setItem('seguros', JSON.stringify(segurosGuardados));
+
         Swal.fire({
-            title: 'Carrito Vacío',
-            text: 'No has agregado ningún seguro.',
-            icon: 'info',
+            title: 'Seguro Seleccionado',
+            html: `${seguroSeleccionado.nombre}<br>Costo Total: ${total}<br>Cuotas: ${cuotas}<br>Total por Cuota: ${totalCuotas.toFixed(2)}`,
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+        }).then(() => {
+            // Limpiar el combo de cuotas y ocultar el contenedor
+            document.getElementById('cuotas').selectedIndex = 0; // Resetear selección
+            document.getElementById('cuotasContainer').style.display = 'none'; // Ocultar contenedor
+            document.getElementById('accionBtn').style.display = 'none'; // Ocultar botón
+            actualizarCarrito();
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: error.message,
+            icon: 'error',
             confirmButtonText: 'Aceptar'
         });
-    } else {
-        Swal.fire({
-            title: 'Carrito de Seguros',
-            html: carritoSeguros.map(seguro => `<p>${seguro}</p>`).join(''),
-            icon: 'info',
-            confirmButtonText: 'Comprar'
-        });
     }
 });
 
-const tasasInteres = {
-    1: 0.10, 
-    2: 0.05, 
-    3: 0.08 
-};
+class Simulacion {
+    constructor(tipoPrestamo, monto, cuotas, valorCuota) {
+        this.tipoPrestamo = tipoPrestamo;
+        this.monto = monto;
+        this.cuotas = cuotas;
+        this.valorCuota = valorCuota;
+    }
+
+    toJSON() {
+        return {
+            tipoPrestamo: this.tipoPrestamo,
+            monto: this.monto,
+            cuotas: this.cuotas,
+            valorCuota: this.valorCuota
+        };
+    }
+}
 
 document.getElementById('simulacionForm').addEventListener('submit', (event) => {
-    event.preventDefault(); 
+    event.preventDefault();
 
     const tipoPrestamo = document.getElementById('prestamo').value;
     const monto = parseFloat(document.getElementById('monto').value);
-    const cuotasPrestamo = parseInt(document.getElementById('cuotasPrestamo').value);
+    const cuotas = parseInt(document.getElementById('cuotasPrestamo').value);
 
-    if (!monto || monto <= 0 || !cuotasPrestamo || cuotasPrestamo <= 0) {
-        alert("Por favor, ingrese un monto y una cantidad de cuotas válidos.");
+    if (!monto || monto <= 0 || !cuotas || cuotas <= 0) {
+        Swal.fire({
+            title: 'Error',
+            text: "Por favor, ingrese un monto y una cantidad de cuotas válidos.",
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
         return;
     }
 
-    const tasaInteres = tasasInteres[tipoPrestamo];
-    const valorCuota = (monto * (1 + tasaInteres)) / cuotasPrestamo;
+    const tasaInteres = 0.05;
+    const valorCuota = (monto * (1 + tasaInteres)) / cuotas;
 
-    localStorage.setItem('tipoPrestamo', tipoPrestamo);
-    localStorage.setItem('monto', monto);
-    localStorage.setItem('cuotasPrestamo', cuotasPrestamo);
+    const simulacion = new Simulacion(tipoPrestamo, monto, cuotas, valorCuota);
 
-
-    const simulacionResult = `
-        <table style="margin-top: 20px; border: 1px solid black;">
-            <thead>
-                <tr>
-                    <th>Concepto</th>
-                    <th>Valor</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Préstamo solicitado</td>
-                    <td>${tipoPrestamo == '1' ? 'Préstamo Consumo' : tipoPrestamo == '2' ? 'Préstamo Hipotecario' : 'Préstamo Automotor'}</td>
-                </tr>
-                <tr>
-                    <td>Monto</td>
-                    <td>${monto.toFixed(2)}</td>
-                </tr>
-                <tr>
-                    <td>Cuotas</td>
-                    <td>${cuotasPrestamo}</td>
-                </tr>
-                <tr>
-                    <td>Valor cuota</td>
-                    <td>${valorCuota.toFixed(2)}</td>
-                </tr>
-            </tbody>
-        </table>
-    `;
+    let simulaciones = JSON.parse(localStorage.getItem('simulaciones')) || [];
+    simulaciones.push(simulacion);
+    localStorage.setItem('simulaciones', JSON.stringify(simulaciones));
 
     Swal.fire({
-        title: 'Resultado de la Simulación',
-        html: simulacionResult,
-        icon: 'info',
+        title: 'Simulación Exitosa',
+        html: `Monto: ${monto.toFixed(2)}<br>Cuotas: ${cuotas}<br>Valor Cuota: ${valorCuota.toFixed(2)}`,
+        icon: 'success',
         confirmButtonText: 'Aceptar'
     });
+    actualizarCarrito();
 });
+
+function actualizarCarrito() {
+    const transacciones = JSON.parse(localStorage.getItem('transacciones')) || [];
+    const seguros = JSON.parse(localStorage.getItem('seguros')) || [];
+    const simulaciones = JSON.parse(localStorage.getItem('simulaciones')) || [];
+
+    const carritoCount = transacciones.length + seguros.length + simulaciones.length;
+    document.getElementById('carrito-count').textContent = carritoCount;
+}
+
+function obtenerCarrito() {
+    return new Promise((resolve) => {
+        const transacciones = JSON.parse(localStorage.getItem('transacciones')) || [];
+        const seguros = JSON.parse(localStorage.getItem('seguros')) || [];
+        const simulaciones = JSON.parse(localStorage.getItem('simulaciones')) || [];
+        resolve({ transacciones, seguros, simulaciones });
+    });
+}
+
+function mostrarCarrito() {
+    obtenerCarrito().then(({ transacciones, seguros, simulaciones }) => {
+        return new Promise((resolve) => {
+            let contenido = '<h2>Contenido del Carrito</h2>';
+            
+            if (transacciones.length > 0) {
+                contenido += '<h3>Transacciones</h3><ul>';
+                transacciones.forEach(t => {
+                    const importeFormateado = t.importe.toFixed(2);
+                    const resultadoFormateado = t.resultado.toFixed(2);
+                    contenido += `<li>${t.monedaOrigen} a ${t.monedaDestino}: ${importeFormateado} - ${resultadoFormateado} (${t.regalo})</li>`;
+                });
+                contenido += '</ul>';
+            }
+
+            if (seguros.length > 0) {
+                contenido += '<h3>Seguros</h3><ul>';
+                seguros.forEach(s => {
+                    contenido += `<li>${s.tipoSeguro}: ${s.total} - ${s.cuotas} cuotas (${s.totalCuotas.toFixed(2)} por cuota)</li>`;
+                });
+                contenido += '</ul>';
+            }
+
+            if (simulaciones.length > 0) {
+                contenido += '<h3>Simulaciones</h3><ul>';
+                simulaciones.forEach(s => {
+                    contenido += `<li>${s.tipoPrestamo}: ${s.monto} - ${s.cuotas} cuotas (${s.valorCuota.toFixed(2)} por cuota)</li>`;
+                });
+                contenido += '</ul>';
+            }
+
+            Swal.fire({
+                html: `
+                    ${contenido}
+                    <button id="seguirComprando" class="swal2-confirm" style="background-color: #007bff; color: white; border: none; border-radius: 4px; padding: 0.5rem 1rem; cursor: pointer;">Seguir comprando</button>
+                `,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar',
+                cancelButtonText: 'Borrar',
+                customClass: {
+                    confirmButton: 'swal2-confirm',
+                    cancelButton: 'swal2-cancel',
+                    popup: 'swal2-popup',
+                },
+                didOpen: () => {
+                    document.getElementById('seguirComprando').addEventListener('click', () => {
+                        Swal.close(); // Cierra el modal sin hacer más cambios
+                        resolve({ action: 'seguirComprando' });
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    resolve({ action: 'confirmarCompra' });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    resolve({ action: 'borrarCarrito' });
+                }
+            });
+        });
+    }).then(({ action }) => {
+        switch (action) {
+            case 'confirmarCompra':
+                return Swal.fire({
+                    title: 'Compra Confirmada',
+                    text: 'Gracias por tu compra.',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    // Limpiar el carrito después de confirmar la compra
+                    localStorage.removeItem('transacciones');
+                    localStorage.removeItem('seguros');
+                    localStorage.removeItem('simulaciones');
+                    actualizarCarrito();
+                });
+            case 'borrarCarrito':
+                return Swal.fire({
+                    title: 'Carrito Vacío',
+                    text: 'El carrito ha sido borrado.',
+                    icon: 'info',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    // Limpiar el carrito después de borrar
+                    localStorage.removeItem('transacciones');
+                    localStorage.removeItem('seguros');
+                    localStorage.removeItem('simulaciones');
+                    actualizarCarrito();
+                });
+        }
+    }).catch(error => {
+        console.error('Error al obtener el carrito:', error);
+    });
+
+    
+    
+}
+
+document.getElementById('cartIcon').addEventListener('click', mostrarCarrito);
+
+actualizarCarrito();

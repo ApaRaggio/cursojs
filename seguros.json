@@ -1,0 +1,15 @@
+{
+    "1": {
+      "nombre": "Seguro Automotor",
+      "costo": 5000
+    },
+    "2": {
+      "nombre": "Seguro Hipotecario",
+      "costo": 10000
+    },
+    "3": {
+      "nombre": "Seguro de Vida",
+      "costo": 7500
+    }
+  }
+  
