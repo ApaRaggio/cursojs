@@ -109,8 +109,8 @@ buttons.forEach(button => {
 
 const forms = main.querySelectorAll('form');
 forms.forEach(form => {
-    form.style.margin = '0 auto'; // Centrar el formulario dentro del div
-    form.style.maxWidth = '100%'; // Ancho máximo del formulario al 100% del contenedor
+    form.style.margin = '0 auto'; 
+    form.style.maxWidth = '100%'; 
     form.style.display = 'flex';
     form.style.flexDirection = 'column';
     form.style.justifyContent = 'center';
@@ -178,17 +178,17 @@ document.getElementById('conversionForm').addEventListener('submit', async (even
     }
 
     try {
-        // Llama a la API para obtener las tasas de cambio
+     
         const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
         if (!response.ok) {
             throw new Error('Error al obtener las tasas de cambio');
         }
         const tasasCambio = await response.json();
 
-        // Define las monedas de origen y destino
+        
         const monedas = {
             '1': 'USD',
-            '2': 'UYU', // Peso Uruguayo
+            '2': 'UYU', 
             '3': 'EUR'
         };
 
@@ -205,7 +205,7 @@ document.getElementById('conversionForm').addEventListener('submit', async (even
             return;
         }
 
-        // Obtiene la cotización de la moneda destino con respecto a la moneda origen
+        
         const cotizacion = tasasCambio.rates[monedaDestino] / tasasCambio.rates[monedaOrigen];
 
         if (!cotizacion) {
@@ -223,7 +223,7 @@ document.getElementById('conversionForm').addEventListener('submit', async (even
         let regalo = "No accediste a regalo";
         let cotizaciones = [];
 
-        // Comparar la cotización actual con las tasas definidas en la nueva nomenclatura
+    
         if (cotizacion === tasasCambio.rates['UYU'] / tasasCambio.rates['USD'] || 
             cotizacion === tasasCambio.rates['EUR'] / tasasCambio.rates['USD']) {
             cotizaciones.push(1);
@@ -262,7 +262,7 @@ document.getElementById('conversionForm').addEventListener('submit', async (even
             }
         }
 
-        // Muestra el resultado
+       
         Swal.fire({
             title: 'Conversión Exitosa',
             html: `Monto convertido: ${importeConvertido.toFixed(2)}<br>${regalo}`,
@@ -270,13 +270,13 @@ document.getElementById('conversionForm').addEventListener('submit', async (even
             confirmButtonText: 'Aceptar'
         });
 
-        // Guarda la transacción
+       
         const transaccion = new Transaccion(seleccion, importe, cambioMoneda, importeConvertido, regalo);
         let transacciones = JSON.parse(localStorage.getItem('transacciones')) || [];
         transacciones.push(transaccion);
         localStorage.setItem('transacciones', JSON.stringify(transacciones));
 
-        // Actualiza el carrito
+       
         actualizarCarrito();
 
     } catch (error) {
@@ -368,10 +368,10 @@ document.getElementById('seguro').addEventListener('submit', async (event) => {
             icon: 'success',
             confirmButtonText: 'Aceptar'
         }).then(() => {
-            // Limpiar el combo de cuotas y ocultar el contenedor
-            document.getElementById('cuotas').selectedIndex = 0; // Resetear selección
-            document.getElementById('cuotasContainer').style.display = 'none'; // Ocultar contenedor
-            document.getElementById('accionBtn').style.display = 'none'; // Ocultar botón
+            
+            document.getElementById('cuotas').selectedIndex = 0; 
+            document.getElementById('cuotasContainer').style.display = 'none'; 
+            document.getElementById('accionBtn').style.display = 'none'; 
             actualizarCarrito();
         });
     } catch (error) {
@@ -503,7 +503,7 @@ function mostrarCarrito() {
                 },
                 didOpen: () => {
                     document.getElementById('seguirComprando').addEventListener('click', () => {
-                        Swal.close(); // Cierra el modal sin hacer más cambios
+                        Swal.close(); 
                         resolve({ action: 'seguirComprando' });
                     });
                 }
@@ -524,7 +524,7 @@ function mostrarCarrito() {
                     icon: 'success',
                     confirmButtonText: 'Aceptar'
                 }).then(() => {
-                    // Limpiar el carrito después de confirmar la compra
+                    
                     localStorage.removeItem('transacciones');
                     localStorage.removeItem('seguros');
                     localStorage.removeItem('simulaciones');
@@ -537,7 +537,7 @@ function mostrarCarrito() {
                     icon: 'info',
                     confirmButtonText: 'Aceptar'
                 }).then(() => {
-                    // Limpiar el carrito después de borrar
+               
                     localStorage.removeItem('transacciones');
                     localStorage.removeItem('seguros');
                     localStorage.removeItem('simulaciones');
